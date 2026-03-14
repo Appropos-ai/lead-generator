@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect"
+import { Context, Duration, Effect, Layer } from "effect"
 import type { PluginMetadata, PluginRun, ScrapedLead } from "@lead-generator/shared"
 import { DatabaseService } from "./DatabaseService.js"
 import { LeadService } from "./LeadService.js"
@@ -25,14 +25,38 @@ export interface PluginService {
 export const PluginService = Context.GenericTag<PluginService>("PluginService")
 
 const PLUGINS_DIR = path.join(__dirname, "..", "..", "plugins")
+const PLUGIN_NAME_RE = /^[a-zA-Z0-9_-]{1,64}$/
+
+function sanitizeError(msg: string): string {
+  return msg
+    .replace(/[A-Z_]{2,}=[^\s]+/g, "[REDACTED]")
+    .slice(0, 500)
+}
+
+function isValidPluginName(name: string): boolean {
+  if (!PLUGIN_NAME_RE.test(name)) return false
+  const resolved = path.resolve(PLUGINS_DIR, name)
+  if (!resolved.startsWith(PLUGINS_DIR + path.sep)) return false
+  try {
+    const real = fs.realpathSync(resolved)
+    return real.startsWith(fs.realpathSync(PLUGINS_DIR) + path.sep)
+  } catch {
+    return false
+  }
+}
 
 async function loadPlugin(name: string): Promise<PluginModule | undefined> {
+  if (!isValidPluginName(name)) return undefined
+
   const pluginPath = path.join(PLUGINS_DIR, name, "index.ts")
   const pluginPathJs = path.join(PLUGINS_DIR, name, "index.js")
+  const realPluginsDir = fs.realpathSync(PLUGINS_DIR)
 
   for (const p of [pluginPath, pluginPathJs]) {
     if (fs.existsSync(p)) {
-      const mod = await import(pathToFileURL(p).href)
+      const realPath = fs.realpathSync(p)
+      if (!realPath.startsWith(realPluginsDir + path.sep)) return undefined
+      const mod = await import(pathToFileURL(realPath).href)
       return mod.default ?? mod
     }
   }
@@ -43,6 +67,7 @@ function discoverPlugins(): string[] {
   if (!fs.existsSync(PLUGINS_DIR)) return []
   return fs.readdirSync(PLUGINS_DIR)
     .filter((f) => {
+      if (!isValidPluginName(f)) return false
       const dir = path.join(PLUGINS_DIR, f)
       return fs.statSync(dir).isDirectory() &&
         (fs.existsSync(path.join(dir, "index.ts")) || fs.existsSync(path.join(dir, "index.js")))
@@ -88,8 +113,13 @@ export const PluginServiceLive = Layer.effect(
           const scrapeAndInsert: Effect.Effect<PluginRun, PluginExecutionError> = Effect.gen(function* () {
             const scraped = yield* Effect.tryPromise({
               try: () => mod.scrape(),
-              catch: (err) => new PluginExecutionError({ message: err instanceof Error ? err.message : String(err) }),
-            })
+              catch: (err) => new PluginExecutionError({ message: sanitizeError(err instanceof Error ? err.message : String(err)) }),
+            }).pipe(
+              Effect.timeout(Duration.seconds(30)),
+              Effect.catchTag("TimeoutException", () =>
+                Effect.fail(new PluginExecutionError({ message: `Plugin ${name} timed out after 30s` }))
+              ),
+            )
             let added = 0
             for (const s of scraped) {
               const createResult = yield* Effect.either(
@@ -121,7 +151,7 @@ export const PluginServiceLive = Layer.effect(
           const result = yield* Effect.either(scrapeAndInsert)
 
           if (result._tag === "Left") {
-            const message = result.left.message
+            const message = sanitizeError(result.left.message)
             yield* db.run(
               `UPDATE plugin_runs SET status = 'failed', completed_at = datetime('now'),
                error_message = ? WHERE id = ?`,

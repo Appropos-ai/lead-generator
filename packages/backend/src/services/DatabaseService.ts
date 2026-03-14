@@ -11,6 +11,7 @@ export interface DatabaseService {
   readonly get: <T>(sql: string, ...params: unknown[]) => Effect.Effect<T | undefined>
   readonly all: <T>(sql: string, ...params: unknown[]) => Effect.Effect<T[]>
   readonly transaction: <A>(fn: () => A) => Effect.Effect<A>
+  readonly close: () => void
 }
 
 export const DatabaseService = Context.GenericTag<DatabaseService>("DatabaseService")
@@ -31,7 +32,7 @@ export const DatabaseServiceLive = Layer.scoped(
       const migrationsDir = path.join(__dirname, "..", "db", "migrations")
       if (fs.existsSync(migrationsDir)) {
         const files = fs.readdirSync(migrationsDir)
-          .filter((f) => f.endsWith(".sql"))
+          .filter((f) => /^\d{3}_[a-zA-Z0-9_]+\.sql$/.test(f))
           .sort()
         for (const file of files) {
           const sql = fs.readFileSync(path.join(migrationsDir, file), "utf-8")
@@ -46,9 +47,10 @@ export const DatabaseServiceLive = Layer.scoped(
         all: <T>(sql: string, ...params: unknown[]) =>
           Effect.sync(() => db.prepare(sql).all(...params) as T[]),
         transaction: <A>(fn: () => A) => Effect.sync(() => db.transaction(fn)()),
+        close: () => db.close(),
       }
       return service
     }),
-    () => Effect.sync(() => { /* db closes on process exit */ })
+    (service) => Effect.sync(() => { service.close() })
   )
 )

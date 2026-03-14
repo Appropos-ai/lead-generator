@@ -5,6 +5,7 @@ import { useLead, useUpdateLead, useDeleteLead } from "../hooks/useLeads.js"
 import { useOutreach, useCreateOutreach, useDeleteOutreach } from "../hooks/useOutreach.js"
 
 const STAGES = ["new", "contacted", "responded", "converted", "lost"] as const
+const isSafeUrl = (url: string) => /^https?:\/\//i.test(url)
 
 export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -121,7 +122,7 @@ export default function LeadDetailPage() {
             </div>
             <div>
               <dt className="text-gray-500">LinkedIn</dt>
-              <dd>{lead.linkedin_url ? <a href={lead.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{lead.linkedin_url}</a> : "—"}</dd>
+              <dd>{lead.linkedin_url ? (isSafeUrl(lead.linkedin_url) ? <a href={lead.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{lead.linkedin_url}</a> : <span>{lead.linkedin_url}</span>) : "—"}</dd>
             </div>
             <div>
               <dt className="text-gray-500">Source</dt>

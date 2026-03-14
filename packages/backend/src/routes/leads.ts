@@ -2,6 +2,7 @@ import { Effect } from "effect"
 import { Schema } from "effect"
 import { route } from "../server.js"
 import { LeadService } from "../services/LeadService.js"
+import { parseIntParam } from "../utils/validation.js"
 import {
   CreateLeadInput,
   UpdateLeadInput,
@@ -15,7 +16,9 @@ export function registerLeadRoutes(leadService: LeadService) {
   )
 
   route("GET", "/api/leads/:id", (_req, params) =>
-    leadService.getById(Number(params.id))
+    Effect.flatMap(parseIntParam(params.id, "id"), (id) =>
+      leadService.getById(id)
+    )
   )
 
   route("POST", "/api/leads", (_req, _params, body) =>
@@ -26,14 +29,18 @@ export function registerLeadRoutes(leadService: LeadService) {
   )
 
   route("PATCH", "/api/leads/:id", (_req, params, body) =>
-    Effect.flatMap(
-      Schema.decodeUnknown(UpdateLeadInput)(body),
-      (input) => leadService.update(Number(params.id), input)
+    Effect.flatMap(parseIntParam(params.id, "id"), (id) =>
+      Effect.flatMap(
+        Schema.decodeUnknown(UpdateLeadInput)(body),
+        (input) => leadService.update(id, input)
+      )
     )
   )
 
   route("DELETE", "/api/leads/:id", (_req, params) =>
-    leadService.remove(Number(params.id))
+    Effect.flatMap(parseIntParam(params.id, "id"), (id) =>
+      leadService.remove(id)
+    )
   )
 
   route("POST", "/api/leads/bulk/stage", (_req, _params, body) =>

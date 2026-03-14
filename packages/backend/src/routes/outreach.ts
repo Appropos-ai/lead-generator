@@ -1,11 +1,14 @@
 import { Effect, Schema } from "effect"
 import { route } from "../server.js"
 import { OutreachService } from "../services/OutreachService.js"
+import { parseIntParam } from "../utils/validation.js"
 import { CreateOutreachInput } from "@lead-generator/shared"
 
 export function registerOutreachRoutes(outreachService: OutreachService) {
   route("GET", "/api/outreach/:leadId", (_req, params) =>
-    outreachService.listByLead(Number(params.leadId))
+    Effect.flatMap(parseIntParam(params.leadId, "leadId"), (leadId) =>
+      outreachService.listByLead(leadId)
+    )
   )
 
   route("POST", "/api/outreach", (_req, _params, body) =>
@@ -16,6 +19,8 @@ export function registerOutreachRoutes(outreachService: OutreachService) {
   )
 
   route("DELETE", "/api/outreach/:id", (_req, params) =>
-    outreachService.remove(Number(params.id))
+    Effect.flatMap(parseIntParam(params.id, "id"), (id) =>
+      outreachService.remove(id)
+    )
   )
 }

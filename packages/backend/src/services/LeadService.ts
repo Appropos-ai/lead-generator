@@ -3,6 +3,10 @@ import type { Lead, CreateLeadInput, UpdateLeadInput, PipelineStage } from "@lea
 import { DatabaseService } from "./DatabaseService.js"
 import { LeadNotFoundError, DuplicateLeadError } from "../errors/index.js"
 
+const UPDATABLE_LEAD_COLUMNS = new Set([
+  "name", "email", "linkedin_url", "company", "title", "source", "notes", "stage",
+])
+
 export interface LeadService {
   readonly list: (stage?: string) => Effect.Effect<Lead[]>
   readonly getById: (id: number) => Effect.Effect<Lead, LeadNotFoundError>
@@ -79,9 +83,8 @@ export const LeadServiceLive = Layer.effect(
 
         const fields: string[] = []
         const values: unknown[] = []
-        const updates: Record<string, unknown> = { ...input }
-        for (const [key, value] of Object.entries(updates)) {
-          if (value !== undefined) {
+        for (const [key, value] of Object.entries(input)) {
+          if (value !== undefined && UPDATABLE_LEAD_COLUMNS.has(key)) {
             fields.push(`${key} = ?`)
             values.push(value)
           }
