@@ -23,3 +23,9 @@ export class PluginExecutionError extends Schema.TaggedError<PluginExecutionErro
   { message: Schema.String },
   { status: 500 }
 ) {}
+
+export class PluginDiscoveryError extends Schema.TaggedError<PluginDiscoveryError>()(
+  "PluginDiscoveryError",
+  { message: Schema.String },
+  { status: 500 }
+) {}

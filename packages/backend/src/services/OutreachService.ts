@@ -26,10 +26,13 @@ export const OutreachServiceLive = Layer.effect(
           input.lead_id, input.date, input.channel, input.status, input.notes ?? null
         ),
         (result) =>
-          db.get<OutreachEntry>(
-            "SELECT * FROM outreach_log WHERE id = ?",
-            result.lastInsertRowid
-          ) as Effect.Effect<OutreachEntry>
+          Effect.flatMap(
+            db.get<OutreachEntry>(
+              "SELECT * FROM outreach_log WHERE id = ?",
+              result.lastInsertRowid
+            ),
+            (entry) => entry ? Effect.succeed(entry) : Effect.die(new Error("Outreach entry not found after insert"))
+          )
       ),
 
     remove: (id) =>

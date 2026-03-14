@@ -52,7 +52,10 @@ export const LeadServiceLive = Layer.effect(
               input.notes ?? null, stage
             ),
             (result) =>
-              db.get<Lead>("SELECT * FROM leads WHERE id = ?", result.lastInsertRowid) as Effect.Effect<Lead>
+              Effect.flatMap(
+                db.get<Lead>("SELECT * FROM leads WHERE id = ?", result.lastInsertRowid),
+                (lead) => lead ? Effect.succeed(lead) : Effect.die(new Error("Lead not found after insert"))
+              )
           )
         }
       ),
@@ -90,7 +93,9 @@ export const LeadServiceLive = Layer.effect(
           yield* db.run(`UPDATE leads SET ${fields.join(", ")} WHERE id = ?`, ...values)
         }
 
-        return (yield* db.get<Lead>("SELECT * FROM leads WHERE id = ?", id))!
+        const updated = yield* db.get<Lead>("SELECT * FROM leads WHERE id = ?", id)
+        if (!updated) return yield* Effect.fail(new LeadNotFoundError({ message: `Lead ${id} not found after update` }))
+        return updated
       }),
 
     remove: (id) =>

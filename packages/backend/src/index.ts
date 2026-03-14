@@ -14,8 +14,7 @@ const DbLayer = DatabaseServiceLive
 const LeadLayer = LeadServiceLive.pipe(Layer.provide(DbLayer))
 const OutreachLayer = OutreachServiceLive.pipe(Layer.provide(DbLayer))
 const PluginLayer = PluginServiceLive.pipe(
-  Layer.provide(LeadLayer),
-  Layer.provide(DbLayer)
+  Layer.provide(Layer.merge(LeadLayer, DbLayer))
 )
 
 const AppLayer = Layer.mergeAll(LeadLayer, OutreachLayer, PluginLayer)

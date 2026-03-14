@@ -81,9 +81,15 @@ export function createServer(port: number): Effect.Effect<http.Server> {
               res.writeHead(200, { "Content-Type": "application/json" })
               res.end(JSON.stringify(data))
             }),
-            Effect.catchAll((err: any) => {
-              const status = err?.status ?? 500
-              const message = err?.message ?? "Internal server error"
+            Effect.catchAll((err: unknown) => {
+              const status =
+                typeof err === "object" && err !== null && "status" in err && typeof (err as Record<string, unknown>).status === "number"
+                  ? (err as Record<string, unknown>).status as number
+                  : 500
+              const message =
+                typeof err === "object" && err !== null && "message" in err && typeof (err as Record<string, unknown>).message === "string"
+                  ? (err as Record<string, unknown>).message as string
+                  : "Internal server error"
               res.writeHead(status, { "Content-Type": "application/json" })
               res.end(JSON.stringify({ error: message }))
               return Effect.void

@@ -2,7 +2,7 @@ import { Context, Effect, Layer } from "effect"
 import type { PluginMetadata, PluginRun, ScrapedLead } from "@lead-generator/shared"
 import { DatabaseService } from "./DatabaseService.js"
 import { LeadService } from "./LeadService.js"
-import { PluginNotFoundError, PluginExecutionError } from "../errors/index.js"
+import { PluginNotFoundError, PluginExecutionError, PluginDiscoveryError } from "../errors/index.js"
 import { DuplicateLeadError } from "../errors/index.js"
 import * as fs from "node:fs"
 import * as path from "node:path"
@@ -17,7 +17,7 @@ export interface PluginModule {
 }
 
 export interface PluginService {
-  readonly list: () => Effect.Effect<PluginMetadata[]>
+  readonly list: () => Effect.Effect<PluginMetadata[], PluginDiscoveryError>
   readonly run: (name: string) => Effect.Effect<PluginRun, PluginNotFoundError | PluginExecutionError>
   readonly listRuns: () => Effect.Effect<PluginRun[]>
 }
@@ -64,8 +64,8 @@ export const PluginServiceLive = Layer.effect(
             }
             return plugins
           },
-          catch: () => new Error("Failed to list plugins"),
-        }) as Effect.Effect<PluginMetadata[]>,
+          catch: (err) => new PluginDiscoveryError({ message: err instanceof Error ? err.message : String(err) }),
+        }),
 
       run: (name) =>
         Effect.gen(function* () {
@@ -85,14 +85,14 @@ export const PluginServiceLive = Layer.effect(
           )
           const runId = runResult.lastInsertRowid
 
-          try {
+          const scrapeAndInsert: Effect.Effect<PluginRun, PluginExecutionError> = Effect.gen(function* () {
             const scraped = yield* Effect.tryPromise({
               try: () => mod.scrape(),
               catch: (err) => new PluginExecutionError({ message: err instanceof Error ? err.message : String(err) }),
             })
             let added = 0
             for (const s of scraped) {
-              const result = yield* Effect.either(
+              const createResult = yield* Effect.either(
                 leads.create({
                   name: s.name,
                   email: s.email,
@@ -103,7 +103,7 @@ export const PluginServiceLive = Layer.effect(
                   notes: s.notes ?? null,
                 })
               )
-              if (result._tag === "Right") added++
+              if (createResult._tag === "Right") added++
               // Silently skip duplicates
             }
 
@@ -113,9 +113,15 @@ export const PluginServiceLive = Layer.effect(
               scraped.length, added, runId
             )
 
-            return (yield* db.get<PluginRun>("SELECT * FROM plugin_runs WHERE id = ?", runId))!
-          } catch (err) {
-            const message = err instanceof Error ? err.message : String(err)
+            const run = yield* db.get<PluginRun>("SELECT * FROM plugin_runs WHERE id = ?", runId)
+            if (!run) return yield* Effect.die(new Error("Plugin run not found after insert"))
+            return run
+          })
+
+          const result = yield* Effect.either(scrapeAndInsert)
+
+          if (result._tag === "Left") {
+            const message = result.left.message
             yield* db.run(
               `UPDATE plugin_runs SET status = 'failed', completed_at = datetime('now'),
                error_message = ? WHERE id = ?`,
@@ -123,6 +129,7 @@ export const PluginServiceLive = Layer.effect(
             )
             return yield* Effect.fail(new PluginExecutionError({ message }))
           }
+          return result.right
         }),
 
       listRuns: () =>
