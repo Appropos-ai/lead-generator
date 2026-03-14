@@ -1,0 +1,21 @@
+{
+  "name": "@lead-generator/backend",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@lead-generator/shared": "workspace:*",
+    "effect": "^3.14.0",
+    "@effect/platform": "^0.76.0",
+    "@effect/platform-node": "^0.72.0",
+    "better-sqlite3": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "tsx": "^4.19.0"
+  }
+}
