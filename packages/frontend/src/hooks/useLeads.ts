@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { leadsApi } from "../api/client.js"
+import type { PaginatedLeads } from "../api/client.js"
 import toast from "react-hot-toast"
 
-export function useLeads(stage?: string) {
-  return useQuery({
-    queryKey: ["leads", stage],
-    queryFn: () => leadsApi.list(stage),
+export function useLeads(opts?: { stage?: string; page?: number; limit?: number }) {
+  return useQuery<PaginatedLeads>({
+    queryKey: ["leads", opts?.stage, opts?.page, opts?.limit],
+    queryFn: () => leadsApi.list(opts),
   })
 }
 

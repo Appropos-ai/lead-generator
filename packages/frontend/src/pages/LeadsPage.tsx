@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSearchParams, Link } from "react-router-dom"
-import { Plus, Trash2, ArrowRight } from "lucide-react"
+import { Plus, Trash2, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { useLeads, useCreateLead, useBulkStage, useBulkDelete } from "../hooks/useLeads.js"
 import type { Lead } from "../api/client.js"
 
 const STAGES = ["all", "new", "contacted", "responded", "converted", "lost"] as const
+const PAGE_SIZE = 50
 
 const stageBadgeColors: Record<string, string> = {
   new: "bg-blue-100 text-blue-700",
@@ -17,9 +18,18 @@ const stageBadgeColors: Record<string, string> = {
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const stageFilter = searchParams.get("stage") ?? "all"
-  const { data: leads = [], isLoading } = useLeads(stageFilter === "all" ? undefined : stageFilter)
+  const page = parseInt(searchParams.get("page") ?? "1", 10)
+  const { data: result, isLoading } = useLeads({
+    stage: stageFilter === "all" ? undefined : stageFilter,
+    page,
+    limit: PAGE_SIZE,
+  })
+  const leads = result?.data ?? []
+  const total = result?.total ?? 0
+  const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const [selected, setSelected] = useState<Set<number>>(new Set())
+  useEffect(() => setSelected(new Set()), [page, stageFilter])
   const [showAddModal, setShowAddModal] = useState(false)
 
   const createLead = useCreateLead()
@@ -70,7 +80,7 @@ export default function LeadsPage() {
         {STAGES.map((s) => (
           <button
             key={s}
-            onClick={() => setSearchParams(s === "all" ? {} : { stage: s })}
+            onClick={() => setSearchParams(s === "all" ? {} : { stage: s })}  // resets page to 1
             className={`px-4 py-2 text-sm font-medium capitalize border-b-2 -mb-px transition-colors ${
               stageFilter === s
                 ? "border-blue-600 text-blue-600"
@@ -164,6 +174,38 @@ export default function LeadsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+          <span>{total} lead{total !== 1 ? "s" : ""} total</span>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={page <= 1}
+              onClick={() => {
+                const next = new URLSearchParams(searchParams)
+                next.set("page", String(page - 1))
+                setSearchParams(next)
+              }}
+              className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span>Page {page} of {totalPages}</span>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => {
+                const next = new URLSearchParams(searchParams)
+                next.set("page", String(page + 1))
+                setSearchParams(next)
+              }}
+              className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       )}
 

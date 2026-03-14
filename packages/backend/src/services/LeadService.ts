@@ -7,8 +7,15 @@ const UPDATABLE_LEAD_COLUMNS = new Set([
   "name", "email", "linkedin_url", "company", "title", "source", "notes", "stage",
 ])
 
+export interface PaginatedLeads {
+  readonly data: readonly Lead[]
+  readonly total: number
+  readonly page: number
+  readonly limit: number
+}
+
 export interface LeadService {
-  readonly list: (stage?: string) => Effect.Effect<Lead[]>
+  readonly list: (opts: { stage?: string; page?: number; limit?: number }) => Effect.Effect<PaginatedLeads>
   readonly getById: (id: number) => Effect.Effect<Lead, LeadNotFoundError>
   readonly create: (input: CreateLeadInput) => Effect.Effect<Lead, DuplicateLeadError>
   readonly update: (id: number, input: UpdateLeadInput) => Effect.Effect<Lead, LeadNotFoundError | DuplicateLeadError>
@@ -22,11 +29,24 @@ export const LeadService = Context.GenericTag<LeadService>("LeadService")
 export const LeadServiceLive = Layer.effect(
   LeadService,
   Effect.map(DatabaseService, (db): LeadService => ({
-    list: (stage) => {
-      if (stage) {
-        return db.all<Lead>("SELECT * FROM leads WHERE stage = ? ORDER BY created_at DESC", stage)
-      }
-      return db.all<Lead>("SELECT * FROM leads ORDER BY created_at DESC")
+    list: ({ stage, page = 1, limit = 50 }) => {
+      const offset = (page - 1) * limit
+      const where = stage ? "WHERE stage = ?" : ""
+      const params = stage ? [stage] : []
+
+      return Effect.flatMap(
+        db.get<{ count: number }>(`SELECT COUNT(*) as count FROM leads ${where}`, ...params),
+        (row) => {
+          const total = row?.count ?? 0
+          return Effect.map(
+            db.all<Lead>(
+              `SELECT * FROM leads ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+              ...params, limit, offset
+            ),
+            (data): PaginatedLeads => ({ data, total, page, limit })
+          )
+        }
+      )
     },
 
     getById: (id) =>
@@ -91,7 +111,6 @@ export const LeadServiceLive = Layer.effect(
         }
 
         if (fields.length > 0) {
-          fields.push("updated_at = datetime('now')")
           values.push(id)
           yield* db.run(`UPDATE leads SET ${fields.join(", ")} WHERE id = ?`, ...values)
         }
@@ -115,7 +134,7 @@ export const LeadServiceLive = Layer.effect(
       const placeholders = ids.map(() => "?").join(",")
       return Effect.map(
         db.run(
-          `UPDATE leads SET stage = ?, updated_at = datetime('now') WHERE id IN (${placeholders})`,
+          `UPDATE leads SET stage = ? WHERE id IN (${placeholders})`,
           stage, ...ids
         ),
         () => undefined

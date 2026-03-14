@@ -12,7 +12,11 @@ import {
 
 export function registerLeadRoutes(leadService: LeadService) {
   route("GET", "/api/leads", (_req, params) =>
-    leadService.list(params.stage || undefined)
+    leadService.list({
+      stage: params.stage || undefined,
+      page: params.page ? parseInt(params.page, 10) : undefined,
+      limit: params.limit ? parseInt(params.limit, 10) : undefined,
+    })
   )
 
   route("GET", "/api/leads/:id", (_req, params) =>

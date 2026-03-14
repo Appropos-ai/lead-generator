@@ -29,3 +29,9 @@ export class PluginDiscoveryError extends Schema.TaggedError<PluginDiscoveryErro
   { message: Schema.String },
   { status: 500 }
 ) {}
+
+export class OutreachNotFoundError extends Schema.TaggedError<OutreachNotFoundError>()(
+  "OutreachNotFoundError",
+  { message: Schema.String },
+  { status: 404 }
+) {}

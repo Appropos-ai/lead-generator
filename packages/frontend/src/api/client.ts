@@ -57,10 +57,23 @@ export type PluginRun = {
   error_message: string | null
 }
 
+export type PaginatedLeads = {
+  data: Lead[]
+  total: number
+  page: number
+  limit: number
+}
+
 // Leads
 export const leadsApi = {
-  list: (stage?: string) =>
-    request<Lead[]>(stage ? `/leads?stage=${stage}` : "/leads"),
+  list: (opts?: { stage?: string; page?: number; limit?: number }) => {
+    const params = new URLSearchParams()
+    if (opts?.stage) params.set("stage", opts.stage)
+    if (opts?.page) params.set("page", String(opts.page))
+    if (opts?.limit) params.set("limit", String(opts.limit))
+    const qs = params.toString()
+    return request<PaginatedLeads>(qs ? `/leads?${qs}` : "/leads")
+  },
   get: (id: number) => request<Lead>(`/leads/${id}`),
   create: (data: Partial<Lead>) => request<Lead>("/leads", { method: "POST", body: JSON.stringify(data) }),
   update: (id: number, data: Partial<Lead>) =>

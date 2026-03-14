@@ -1,11 +1,12 @@
 import { Context, Effect, Layer } from "effect"
 import type { OutreachEntry, CreateOutreachInput } from "@lead-generator/shared"
 import { DatabaseService } from "./DatabaseService.js"
+import { OutreachNotFoundError } from "../errors/index.js"
 
 export interface OutreachService {
   readonly listByLead: (leadId: number) => Effect.Effect<OutreachEntry[]>
   readonly create: (input: CreateOutreachInput) => Effect.Effect<OutreachEntry>
-  readonly remove: (id: number) => Effect.Effect<void>
+  readonly remove: (id: number) => Effect.Effect<void, OutreachNotFoundError>
 }
 
 export const OutreachService = Context.GenericTag<OutreachService>("OutreachService")
@@ -36,9 +37,12 @@ export const OutreachServiceLive = Layer.effect(
       ),
 
     remove: (id) =>
-      Effect.map(
+      Effect.flatMap(
         db.run("DELETE FROM outreach_log WHERE id = ?", id),
-        () => undefined
+        (result) =>
+          result.changes === 0
+            ? Effect.fail(new OutreachNotFoundError({ message: `Outreach entry ${id} not found` }))
+            : Effect.void
       ),
   }))
 )
