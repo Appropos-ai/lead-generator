@@ -80,14 +80,14 @@ export const leadsApi = {
     request<Lead>(`/leads/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   delete: (id: number) => request<void>(`/leads/${id}`, { method: "DELETE" }),
   bulkStage: (ids: number[], stage: string) =>
-    request<void>("/leads/bulk/stage", { method: "POST", body: JSON.stringify({ ids, stage }) }),
+    request<void>("/leads/bulk/stage", { method: "PATCH", body: JSON.stringify({ ids, stage }) }),
   bulkDelete: (ids: number[]) =>
     request<void>("/leads/bulk/delete", { method: "POST", body: JSON.stringify({ ids }) }),
 }
 
 // Outreach
 export const outreachApi = {
-  list: (leadId: number) => request<OutreachEntry[]>(`/outreach/${leadId}`),
+  list: (leadId: number) => request<OutreachEntry[]>(`/outreach?lead_id=${leadId}`),
   create: (data: { lead_id: number; date: string; channel: string; status: string; notes?: string }) =>
     request<OutreachEntry>("/outreach", { method: "POST", body: JSON.stringify(data) }),
   delete: (id: number) => request<void>(`/outreach/${id}`, { method: "DELETE" }),

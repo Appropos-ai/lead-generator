@@ -35,3 +35,9 @@ export class OutreachNotFoundError extends Schema.TaggedError<OutreachNotFoundEr
   { message: Schema.String },
   { status: 404 }
 ) {}
+
+export class LeadReferenceError extends Schema.TaggedError<LeadReferenceError>()(
+  "LeadReferenceError",
+  { message: Schema.String },
+  { status: 422 }
+) {}

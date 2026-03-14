@@ -5,8 +5,8 @@ import { parseIntParam } from "../utils/validation.js"
 import { CreateOutreachInput } from "@lead-generator/shared"
 
 export function registerOutreachRoutes(outreachService: OutreachService) {
-  route("GET", "/api/outreach/:leadId", (_req, params) =>
-    Effect.flatMap(parseIntParam(params.leadId, "leadId"), (leadId) =>
+  route("GET", "/api/outreach", (_req, params) =>
+    Effect.flatMap(parseIntParam(params.lead_id, "lead_id"), (leadId) =>
       outreachService.listByLead(leadId)
     )
   )

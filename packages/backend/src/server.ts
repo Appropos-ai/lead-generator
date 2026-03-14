@@ -1,5 +1,5 @@
 import * as http from "node:http"
-import { Effect } from "effect"
+import { Effect, ParseResult } from "effect"
 import { isRateLimited } from "./utils/rateLimiter.js"
 
 const MAX_BODY_SIZE = 1_048_576 // 1 MB
@@ -12,6 +12,7 @@ interface Route {
   pattern: RegExp
   paramNames: string[]
   handler: RouteHandler
+  options?: { status?: number }
 }
 
 const routes: Route[] = []
@@ -25,13 +26,17 @@ function pathToRegex(path: string): { pattern: RegExp; paramNames: string[] } {
   return { pattern: new RegExp(`^${regexStr}$`), paramNames }
 }
 
-export function route(method: string, path: string, handler: RouteHandler) {
+export function route(method: string, path: string, handler: RouteHandler, options?: { status?: number }) {
   const { pattern, paramNames } = pathToRegex(path)
-  routes.push({ method: method.toUpperCase(), pattern, paramNames, handler })
+  routes.push({ method: method.toUpperCase(), pattern, paramNames, handler, options })
 }
 
 class BodyTooLargeError extends Error {
   constructor() { super("Request body too large") }
+}
+
+class MalformedJsonError extends Error {
+  constructor() { super("Malformed JSON body") }
 }
 
 function parseBody(req: http.IncomingMessage): Promise<unknown> {
@@ -50,7 +55,7 @@ function parseBody(req: http.IncomingMessage): Promise<unknown> {
     req.on("end", () => {
       const raw = Buffer.concat(chunks).toString()
       if (!raw) return resolve(undefined)
-      try { resolve(JSON.parse(raw)) } catch { resolve(undefined) }
+      try { resolve(JSON.parse(raw)) } catch { reject(new MalformedJsonError()) }
     })
     req.on("error", (err) => reject(err))
   })
@@ -104,12 +109,28 @@ export function createServer(port: number): Effect.Effect<http.Server> {
         r.paramNames.forEach((name, i) => { params[name] = match[i + 1] })
 
         let body: unknown
+        // Content-Type validation for requests with bodies
+        if (["POST", "PATCH", "PUT", "DELETE"].includes(method)) {
+          const contentType = req.headers["content-type"]
+          const contentLength = req.headers["content-length"]
+          if (contentLength && contentLength !== "0" && contentType && !contentType.includes("application/json")) {
+            res.writeHead(415, { "Content-Type": "application/json" })
+            res.end(JSON.stringify({ error: "Unsupported Media Type: expected application/json" }))
+            return
+          }
+        }
+
         try {
           body = await parseBody(req)
         } catch (err) {
           if (err instanceof BodyTooLargeError) {
             res.writeHead(413, { "Content-Type": "application/json" })
             res.end(JSON.stringify({ error: "Request body too large" }))
+            return
+          }
+          if (err instanceof MalformedJsonError) {
+            res.writeHead(400, { "Content-Type": "application/json" })
+            res.end(JSON.stringify({ error: "Malformed JSON body" }))
             return
           }
           res.writeHead(400, { "Content-Type": "application/json" })
@@ -120,10 +141,23 @@ export function createServer(port: number): Effect.Effect<http.Server> {
         await Effect.runPromise(
           r.handler(req, params, body).pipe(
             Effect.map((data) => {
-              res.writeHead(200, { "Content-Type": "application/json" })
-              res.end(JSON.stringify(data))
+              if (data === undefined || data === null) {
+                res.writeHead(204)
+                res.end()
+              } else {
+                const status = r.options?.status ?? (r.method === "POST" ? 201 : 200)
+                res.writeHead(status, { "Content-Type": "application/json" })
+                res.end(JSON.stringify(data))
+              }
             }),
             Effect.catchAll((err: unknown) => {
+              if (ParseResult.isParseError(err)) {
+                const message = ParseResult.TreeFormatter.formatErrorSync(err)
+                res.writeHead(400, { "Content-Type": "application/json" })
+                res.end(JSON.stringify({ error: message }))
+                return Effect.void
+              }
+
               const status =
                 typeof err === "object" && err !== null && "status" in err && typeof (err as Record<string, unknown>).status === "number"
                   ? (err as Record<string, unknown>).status as number
