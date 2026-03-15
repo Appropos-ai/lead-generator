@@ -12,9 +12,13 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test": "vitest run"
   },
   "dependencies": {
     "effect": "^3.14.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.0"
   }
 }

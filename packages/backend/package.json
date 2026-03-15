@@ -5,17 +5,19 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@lead-generator/shared": "workspace:*",
-    "effect": "^3.14.0",
     "@effect/platform": "^0.76.0",
     "@effect/platform-node": "^0.72.0",
-    "better-sqlite3": "^11.0.0"
+    "@lead-generator/shared": "workspace:*",
+    "better-sqlite3": "^11.0.0",
+    "effect": "^3.14.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.0",
-    "tsx": "^4.19.0"
+    "tsx": "^4.19.0",
+    "vitest": "^4.1.0"
   }
 }

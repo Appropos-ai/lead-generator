@@ -12,6 +12,10 @@ const cleanup = setInterval(() => {
 }, 5 * 60_000)
 cleanup.unref()
 
+export function _resetForTest(): void {
+  hits.clear()
+}
+
 export function isRateLimited(ip: string): boolean {
   const now = Date.now()
   const entry = hits.get(ip)

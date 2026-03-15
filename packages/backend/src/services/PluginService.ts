@@ -25,15 +25,15 @@ export interface PluginService {
 export const PluginService = Context.GenericTag<PluginService>("PluginService")
 
 const PLUGINS_DIR = path.join(__dirname, "..", "..", "plugins")
-const PLUGIN_NAME_RE = /^[a-zA-Z0-9_-]{1,64}$/
+export const PLUGIN_NAME_RE = /^[a-zA-Z0-9_-]{1,64}$/
 
-function sanitizeError(msg: string): string {
+export function sanitizeError(msg: string): string {
   return msg
     .replace(/[A-Z_]{2,}=[^\s]+/g, "[REDACTED]")
     .slice(0, 500)
 }
 
-function isValidPluginName(name: string): boolean {
+export function isValidPluginName(name: string): boolean {
   if (!PLUGIN_NAME_RE.test(name)) return false
   const resolved = path.resolve(PLUGINS_DIR, name)
   if (!resolved.startsWith(PLUGINS_DIR + path.sep)) return false

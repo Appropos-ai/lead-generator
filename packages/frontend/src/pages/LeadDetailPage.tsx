@@ -5,9 +5,9 @@ import { useLead, useUpdateLead, useDeleteLead } from "../hooks/useLeads.js"
 import { useOutreach, useCreateOutreach, useDeleteOutreach } from "../hooks/useOutreach.js"
 import type { PipelineStage, CreateOutreachInput } from "../api/client.js"
 import type { OutreachChannel, OutreachStatus } from "@lead-generator/shared"
+import { isSafeUrl } from "../utils/url.js"
 
 const STAGES: readonly PipelineStage[] = ["new", "contacted", "responded", "converted", "lost"]
-const isSafeUrl = (url: string) => /^https?:\/\//i.test(url)
 
 interface LeadForm {
   name: string
