@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import { Plus, Trash2, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { useLeads, useCreateLead, useBulkStage, useBulkDelete } from "../hooks/useLeads.js"
-import type { Lead } from "../api/client.js"
+import type { CreateLeadInput, PipelineStage } from "../api/client.js"
 
 const STAGES = ["all", "new", "contacted", "responded", "converted", "lost"] as const
 const PAGE_SIZE = 50
@@ -31,6 +31,7 @@ export default function LeadsPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   useEffect(() => setSelected(new Set()), [page, stageFilter])
   const [showAddModal, setShowAddModal] = useState(false)
+  const handleCloseModal = useCallback(() => setShowAddModal(false), [])
 
   const createLead = useCreateLead()
   const bulkStage = useBulkStage()
@@ -52,7 +53,7 @@ export default function LeadsPage() {
     }
   }
 
-  const handleBulkStage = (stage: string) => {
+  const handleBulkStage = (stage: PipelineStage) => {
     bulkStage.mutate({ ids: [...selected], stage })
     setSelected(new Set())
   }
@@ -102,14 +103,16 @@ export default function LeadsPage() {
             <button
               key={s}
               onClick={() => handleBulkStage(s)}
-              className="px-2 py-1 text-xs bg-white border border-gray-200 rounded hover:bg-gray-50 capitalize"
+              disabled={bulkStage.isPending || bulkDelete.isPending}
+              className="px-2 py-1 text-xs bg-white border border-gray-200 rounded hover:bg-gray-50 capitalize disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {s}
             </button>
           ))}
           <button
             onClick={handleBulkDelete}
-            className="ml-auto px-2 py-1 text-xs text-red-600 bg-white border border-red-200 rounded hover:bg-red-50 flex items-center gap-1"
+            disabled={bulkStage.isPending || bulkDelete.isPending}
+            className="ml-auto px-2 py-1 text-xs text-red-600 bg-white border border-red-200 rounded hover:bg-red-50 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 size={12} /> Delete
           </button>
@@ -212,7 +215,8 @@ export default function LeadsPage() {
       {/* Add Lead Modal */}
       {showAddModal && (
         <AddLeadModal
-          onClose={() => setShowAddModal(false)}
+          isPending={createLead.isPending}
+          onClose={handleCloseModal}
           onSubmit={(data) => {
             createLead.mutate(data, { onSuccess: () => setShowAddModal(false) })
           }}
@@ -222,8 +226,20 @@ export default function LeadsPage() {
   )
 }
 
-function AddLeadModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: Partial<Lead>) => void }) {
+type AddLeadModalProps = {
+  isPending: boolean
+  onClose: () => void
+  onSubmit: (data: CreateLeadInput) => void
+}
+
+function AddLeadModal({ isPending, onClose, onSubmit }: AddLeadModalProps) {
   const [form, setForm] = useState({ name: "", email: "", company: "", title: "", linkedin_url: "", notes: "" })
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    document.addEventListener("keydown", handleKey)
+    return () => document.removeEventListener("keydown", handleKey)
+  }, [onClose])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -276,7 +292,7 @@ function AddLeadModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
               Cancel
             </button>
-            <button type="submit" className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+            <button type="submit" disabled={isPending} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
               Create
             </button>
           </div>

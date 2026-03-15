@@ -1,11 +1,23 @@
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft, Trash2, Plus, Send } from "lucide-react"
 import { useLead, useUpdateLead, useDeleteLead } from "../hooks/useLeads.js"
 import { useOutreach, useCreateOutreach, useDeleteOutreach } from "../hooks/useOutreach.js"
+import type { PipelineStage, CreateOutreachInput } from "../api/client.js"
+import type { OutreachChannel, OutreachStatus } from "@lead-generator/shared"
 
-const STAGES = ["new", "contacted", "responded", "converted", "lost"] as const
+const STAGES: readonly PipelineStage[] = ["new", "contacted", "responded", "converted", "lost"]
 const isSafeUrl = (url: string) => /^https?:\/\//i.test(url)
+
+interface LeadForm {
+  name: string
+  email: string
+  company: string
+  title: string
+  linkedin_url: string
+  notes: string
+  stage: PipelineStage
+}
 
 export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -20,9 +32,11 @@ export default function LeadDetailPage() {
   const deleteOutreach = useDeleteOutreach(leadId)
 
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState<Record<string, string>>({})
+  const [form, setForm] = useState<LeadForm>({ name: "", email: "", company: "", title: "", linkedin_url: "", notes: "", stage: "new" })
   const [showOutreachForm, setShowOutreachForm] = useState(false)
+  const handleCloseOutreach = useCallback(() => setShowOutreachForm(false), [])
 
+  if (!id || isNaN(leadId)) return <div className="text-center py-12 text-gray-400">Invalid lead ID</div>
   if (isLoading) return <div className="text-center py-12 text-gray-400">Loading...</div>
   if (!lead) return <div className="text-center py-12 text-gray-400">Lead not found</div>
 
@@ -41,7 +55,18 @@ export default function LeadDetailPage() {
 
   const saveEdit = () => {
     updateLead.mutate(
-      { id: leadId, data: { ...form, company: form.company || null, title: form.title || null, linkedin_url: form.linkedin_url || null, notes: form.notes || null } as any },
+      {
+        id: leadId,
+        data: {
+          name: form.name,
+          email: form.email,
+          company: form.company || null,
+          title: form.title || null,
+          linkedin_url: form.linkedin_url || null,
+          notes: form.notes || null,
+          stage: form.stage,
+        },
+      },
       { onSuccess: () => setEditing(false) }
     )
   }
@@ -90,7 +115,7 @@ export default function LeadDetailPage() {
             <input value={form.linkedin_url} onChange={(e) => setForm((f) => ({ ...f, linkedin_url: e.target.value }))}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
             <label className="text-xs font-medium text-gray-500">Stage</label>
-            <select value={form.stage} onChange={(e) => setForm((f) => ({ ...f, stage: e.target.value }))}
+            <select value={form.stage} onChange={(e) => setForm((f) => ({ ...f, stage: e.target.value as PipelineStage }))}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm capitalize">
               {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -98,7 +123,7 @@ export default function LeadDetailPage() {
             <textarea value={form.notes} rows={3} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
             <div className="flex gap-2 mt-2">
-              <button onClick={saveEdit} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Save</button>
+              <button onClick={saveEdit} disabled={updateLead.isPending} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">Save</button>
               <button onClick={() => setEditing(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
             </div>
           </div>
@@ -167,7 +192,7 @@ export default function LeadDetailPage() {
                   </div>
                   {entry.notes && <p className="text-sm text-gray-600 ml-6">{entry.notes}</p>}
                 </div>
-                <button onClick={() => deleteOutreach.mutate(entry.id)} className="text-gray-400 hover:text-red-500">
+                <button onClick={() => { if (confirm("Delete this outreach entry?")) deleteOutreach.mutate(entry.id) }} className="text-gray-400 hover:text-red-500">
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -178,7 +203,8 @@ export default function LeadDetailPage() {
         {showOutreachForm && (
           <OutreachForm
             leadId={leadId}
-            onClose={() => setShowOutreachForm(false)}
+            isPending={createOutreach.isPending}
+            onClose={handleCloseOutreach}
             onSubmit={(data) => {
               createOutreach.mutate(data, { onSuccess: () => setShowOutreachForm(false) })
             }}
@@ -189,19 +215,33 @@ export default function LeadDetailPage() {
   )
 }
 
-function OutreachForm({
-  leadId, onClose, onSubmit,
-}: {
+type OutreachFormProps = {
   leadId: number
+  isPending: boolean
   onClose: () => void
-  onSubmit: (data: { lead_id: number; date: string; channel: string; status: string; notes?: string }) => void
-}) {
-  const [form, setForm] = useState({
+  onSubmit: (data: CreateOutreachInput) => void
+}
+
+interface OutreachFormState {
+  date: string
+  channel: OutreachChannel
+  status: OutreachStatus
+  notes: string
+}
+
+function OutreachForm({ leadId, isPending, onClose, onSubmit }: OutreachFormProps) {
+  const [form, setForm] = useState<OutreachFormState>({
     date: new Date().toISOString().split("T")[0],
     channel: "email",
     status: "sent",
     notes: "",
   })
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    document.addEventListener("keydown", handleKey)
+    return () => document.removeEventListener("keydown", handleKey)
+  }, [onClose])
 
   return (
     <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white">
@@ -214,7 +254,7 @@ function OutreachForm({
         </div>
         <div>
           <label className="text-xs text-gray-500">Channel</label>
-          <select value={form.channel} onChange={(e) => setForm((f) => ({ ...f, channel: e.target.value }))}
+          <select value={form.channel} onChange={(e) => setForm((f) => ({ ...f, channel: e.target.value as OutreachChannel }))}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
             <option value="email">Email</option>
             <option value="linkedin">LinkedIn</option>
@@ -222,7 +262,7 @@ function OutreachForm({
         </div>
         <div>
           <label className="text-xs text-gray-500">Status</label>
-          <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+          <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as OutreachStatus }))}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
             <option value="sent">Sent</option>
             <option value="replied">Replied</option>
@@ -237,7 +277,8 @@ function OutreachForm({
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
         <button
           onClick={() => onSubmit({ lead_id: leadId, ...form, notes: form.notes || undefined })}
-          className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+          disabled={isPending}
+          className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Save
         </button>

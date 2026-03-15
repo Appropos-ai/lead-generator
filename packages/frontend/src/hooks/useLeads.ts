@@ -1,17 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { leadsApi } from "../api/client.js"
-import type { PaginatedLeads } from "../api/client.js"
+import type { Lead, PaginatedLeads, UpdateLeadInput, PipelineStage } from "../api/client.js"
 import toast from "react-hot-toast"
 
 export function useLeads(opts?: { stage?: string; page?: number; limit?: number }) {
   return useQuery<PaginatedLeads>({
-    queryKey: ["leads", opts?.stage, opts?.page, opts?.limit],
+    queryKey: ["leads", "list", { stage: opts?.stage, page: opts?.page, limit: opts?.limit }],
     queryFn: () => leadsApi.list(opts),
   })
 }
 
 export function useLead(id: number) {
-  return useQuery({
+  return useQuery<Lead>({
     queryKey: ["leads", id],
     queryFn: () => leadsApi.get(id),
     enabled: !!id,
@@ -33,7 +33,7 @@ export function useCreateLead() {
 export function useUpdateLead() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+    mutationFn: ({ id, data }: { id: number; data: UpdateLeadInput }) =>
       leadsApi.update(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["leads"] })
@@ -58,7 +58,7 @@ export function useDeleteLead() {
 export function useBulkStage() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ ids, stage }: { ids: number[]; stage: string }) =>
+    mutationFn: ({ ids, stage }: { ids: number[]; stage: PipelineStage }) =>
       leadsApi.bulkStage(ids, stage),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["leads"] })

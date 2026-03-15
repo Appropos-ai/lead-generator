@@ -1,16 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { pluginsApi } from "../api/client.js"
+import type { PluginMetadata, PluginRun } from "../api/client.js"
 import toast from "react-hot-toast"
 
 export function usePlugins() {
-  return useQuery({
+  return useQuery<PluginMetadata[]>({
     queryKey: ["plugins"],
     queryFn: pluginsApi.list,
   })
 }
 
 export function usePluginRuns() {
-  return useQuery({
+  return useQuery<PluginRun[]>({
     queryKey: ["plugin-runs"],
     queryFn: pluginsApi.runs,
     refetchInterval: 5000,
