@@ -17,6 +17,9 @@ interface Route {
 
 const routes: Route[] = []
 
+// Mutates shared module state — test isolation requires pool: "forks" (process-per-file) in vitest config.
+export function resetRoutes() { routes.length = 0 }
+
 function pathToRegex(path: string): { pattern: RegExp; paramNames: string[] } {
   const paramNames: string[] = []
   const regexStr = path.replace(/:([^/]+)/g, (_, name) => {
