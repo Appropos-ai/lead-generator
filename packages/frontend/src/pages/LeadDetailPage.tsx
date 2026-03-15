@@ -32,7 +32,15 @@ export default function LeadDetailPage() {
   const deleteOutreach = useDeleteOutreach(leadId)
 
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState<LeadForm>({ name: "", email: "", company: "", title: "", linkedin_url: "", notes: "", stage: "new" })
+  const [form, setForm] = useState<LeadForm>({
+    name: "",
+    email: "",
+    company: "",
+    title: "",
+    linkedin_url: "",
+    notes: "",
+    stage: "new",
+  })
   const [showOutreachForm, setShowOutreachForm] = useState(false)
   const handleCloseOutreach = useCallback(() => setShowOutreachForm(false), [])
 
@@ -67,18 +75,21 @@ export default function LeadDetailPage() {
           stage: form.stage,
         },
       },
-      { onSuccess: () => setEditing(false) }
+      { onSuccess: () => setEditing(false) },
     )
   }
 
   const handleDelete = () => {
     if (!confirm("Delete this lead?")) return
-    deleteLead.mutate(leadId, { onSuccess: () => navigate("/") })
+    deleteLead.mutate(leadId, { onSuccess: () => void navigate("/") })
   }
 
   return (
     <div className="max-w-3xl">
-      <button onClick={() => navigate("/")} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+      <button
+        onClick={() => void navigate("/")}
+        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
+      >
         <ArrowLeft size={16} /> Back to leads
       </button>
 
@@ -87,11 +98,17 @@ export default function LeadDetailPage() {
           <h2 className="text-xl font-bold">{lead.name}</h2>
           <div className="flex gap-2">
             {!editing && (
-              <button onClick={startEdit} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+              <button
+                onClick={startEdit}
+                className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+              >
                 Edit
               </button>
             )}
-            <button onClick={handleDelete} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">
+            <button
+              onClick={handleDelete}
+              className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50"
+            >
               <Trash2 size={14} />
             </button>
           </div>
@@ -100,31 +117,68 @@ export default function LeadDetailPage() {
         {editing ? (
           <div className="flex flex-col gap-3">
             <label className="text-xs font-medium text-gray-500">Name</label>
-            <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            />
             <label className="text-xs font-medium text-gray-500">Email</label>
-            <input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+            <input
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            />
             <label className="text-xs font-medium text-gray-500">Company</label>
-            <input value={form.company} onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+            <input
+              value={form.company}
+              onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            />
             <label className="text-xs font-medium text-gray-500">Title</label>
-            <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+            <input
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            />
             <label className="text-xs font-medium text-gray-500">LinkedIn</label>
-            <input value={form.linkedin_url} onChange={(e) => setForm((f) => ({ ...f, linkedin_url: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+            <input
+              value={form.linkedin_url}
+              onChange={(e) => setForm((f) => ({ ...f, linkedin_url: e.target.value }))}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            />
             <label className="text-xs font-medium text-gray-500">Stage</label>
-            <select value={form.stage} onChange={(e) => setForm((f) => ({ ...f, stage: e.target.value as PipelineStage }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm capitalize">
-              {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+            <select
+              value={form.stage}
+              onChange={(e) => setForm((f) => ({ ...f, stage: e.target.value as PipelineStage }))}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm capitalize"
+            >
+              {STAGES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
             </select>
             <label className="text-xs font-medium text-gray-500">Notes</label>
-            <textarea value={form.notes} rows={3} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+            <textarea
+              value={form.notes}
+              rows={3}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            />
             <div className="flex gap-2 mt-2">
-              <button onClick={saveEdit} disabled={updateLead.isPending} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">Save</button>
-              <button onClick={() => setEditing(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+              <button
+                onClick={saveEdit}
+                disabled={updateLead.isPending}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         ) : (
@@ -147,7 +201,24 @@ export default function LeadDetailPage() {
             </div>
             <div>
               <dt className="text-gray-500">LinkedIn</dt>
-              <dd>{lead.linkedin_url ? (isSafeUrl(lead.linkedin_url) ? <a href={lead.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{lead.linkedin_url}</a> : <span>{lead.linkedin_url}</span>) : "—"}</dd>
+              <dd>
+                {lead.linkedin_url ? (
+                  isSafeUrl(lead.linkedin_url) ? (
+                    <a
+                      href={lead.linkedin_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {lead.linkedin_url}
+                    </a>
+                  ) : (
+                    <span>{lead.linkedin_url}</span>
+                  )
+                ) : (
+                  "—"
+                )}
+              </dd>
             </div>
             <div>
               <dt className="text-gray-500">Source</dt>
@@ -183,16 +254,27 @@ export default function LeadDetailPage() {
                   <div className="flex items-center gap-2 mb-1">
                     <Send size={14} className="text-gray-400" />
                     <span className="text-sm font-medium capitalize">{entry.channel}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      entry.status === "replied" ? "bg-green-100 text-green-700" :
-                      entry.status === "bounced" ? "bg-red-100 text-red-700" :
-                      "bg-blue-100 text-blue-700"
-                    }`}>{entry.status}</span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        entry.status === "replied"
+                          ? "bg-green-100 text-green-700"
+                          : entry.status === "bounced"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {entry.status}
+                    </span>
                     <span className="text-xs text-gray-400">{entry.date}</span>
                   </div>
                   {entry.notes && <p className="text-sm text-gray-600 ml-6">{entry.notes}</p>}
                 </div>
-                <button onClick={() => { if (confirm("Delete this outreach entry?")) deleteOutreach.mutate(entry.id) }} className="text-gray-400 hover:text-red-500">
+                <button
+                  onClick={() => {
+                    if (confirm("Delete this outreach entry?")) deleteOutreach.mutate(entry.id)
+                  }}
+                  className="text-gray-400 hover:text-red-500"
+                >
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -238,7 +320,9 @@ function OutreachForm({ leadId, isPending, onClose, onSubmit }: OutreachFormProp
   })
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
     document.addEventListener("keydown", handleKey)
     return () => document.removeEventListener("keydown", handleKey)
   }, [onClose])
@@ -249,32 +333,48 @@ function OutreachForm({ leadId, isPending, onClose, onSubmit }: OutreachFormProp
       <div className="grid grid-cols-3 gap-3 mb-3">
         <div>
           <label className="text-xs text-gray-500">Date</label>
-          <input type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+          <input
+            type="date"
+            value={form.date}
+            onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          />
         </div>
         <div>
           <label className="text-xs text-gray-500">Channel</label>
-          <select value={form.channel} onChange={(e) => setForm((f) => ({ ...f, channel: e.target.value as OutreachChannel }))}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+          <select
+            value={form.channel}
+            onChange={(e) => setForm((f) => ({ ...f, channel: e.target.value as OutreachChannel }))}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          >
             <option value="email">Email</option>
             <option value="linkedin">LinkedIn</option>
           </select>
         </div>
         <div>
           <label className="text-xs text-gray-500">Status</label>
-          <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as OutreachStatus }))}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+          <select
+            value={form.status}
+            onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as OutreachStatus }))}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          >
             <option value="sent">Sent</option>
             <option value="replied">Replied</option>
             <option value="bounced">Bounced</option>
           </select>
         </div>
       </div>
-      <textarea placeholder="Notes" value={form.notes} rows={2}
+      <textarea
+        placeholder="Notes"
+        value={form.notes}
+        rows={2}
         onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3" />
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3"
+      />
       <div className="flex justify-end gap-2">
-        <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+        <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
+          Cancel
+        </button>
         <button
           onClick={() => onSubmit({ lead_id: leadId, ...form, notes: form.notes || undefined })}
           disabled={isPending}

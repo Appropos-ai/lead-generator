@@ -1,9 +1,8 @@
 import { Effect, Schema } from "effect"
 
-export class InvalidParamError extends Schema.TaggedError<InvalidParamError>()(
-  "InvalidParamError",
-  { message: Schema.String },
-) {
+export class InvalidParamError extends Schema.TaggedError<InvalidParamError>()("InvalidParamError", {
+  message: Schema.String,
+}) {
   readonly status = 400
 }
 

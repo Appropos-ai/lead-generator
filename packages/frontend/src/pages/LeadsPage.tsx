@@ -29,6 +29,8 @@ export default function LeadsPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const [selected, setSelected] = useState<Set<number>>(new Set())
+  // Reset selection when page/filter changes — intentional effect-based reset
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setSelected(new Set()), [page, stageFilter])
   const [showAddModal, setShowAddModal] = useState(false)
   const handleCloseModal = useCallback(() => setShowAddModal(false), [])
@@ -40,7 +42,8 @@ export default function LeadsPage() {
   const toggleSelect = (id: number) => {
     setSelected((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
@@ -81,7 +84,7 @@ export default function LeadsPage() {
         {STAGES.map((s) => (
           <button
             key={s}
-            onClick={() => setSearchParams(s === "all" ? {} : { stage: s })}  // resets page to 1
+            onClick={() => setSearchParams(s === "all" ? {} : { stage: s })} // resets page to 1
             className={`px-4 py-2 text-sm font-medium capitalize border-b-2 -mb-px transition-colors ${
               stageFilter === s
                 ? "border-blue-600 text-blue-600"
@@ -160,7 +163,9 @@ export default function LeadsPage() {
                   <td className="px-4 py-3 text-gray-600">{lead.email}</td>
                   <td className="px-4 py-3 text-gray-600">{lead.company ?? "—"}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${stageBadgeColors[lead.stage]}`}>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${stageBadgeColors[lead.stage]}`}
+                    >
                       {lead.stage}
                     </span>
                   </td>
@@ -183,7 +188,9 @@ export default function LeadsPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
-          <span>{total} lead{total !== 1 ? "s" : ""} total</span>
+          <span>
+            {total} lead{total !== 1 ? "s" : ""} total
+          </span>
           <div className="flex items-center gap-2">
             <button
               disabled={page <= 1}
@@ -196,7 +203,9 @@ export default function LeadsPage() {
             >
               <ChevronLeft size={18} />
             </button>
-            <span>Page {page} of {totalPages}</span>
+            <span>
+              Page {page} of {totalPages}
+            </span>
             <button
               disabled={page >= totalPages}
               onClick={() => {
@@ -236,7 +245,9 @@ function AddLeadModal({ isPending, onClose, onSubmit }: AddLeadModalProps) {
   const [form, setForm] = useState({ name: "", email: "", company: "", title: "", linkedin_url: "", notes: "" })
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
     document.addEventListener("keydown", handleKey)
     return () => document.removeEventListener("keydown", handleKey)
   }, [onClose])
@@ -259,40 +270,58 @@ function AddLeadModal({ isPending, onClose, onSubmit }: AddLeadModalProps) {
         <h3 className="text-lg font-bold mb-4">Add Lead</h3>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
-            required placeholder="Name *" value={form.name}
+            required
+            placeholder="Name *"
+            value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
           />
           <input
-            required type="email" placeholder="Email *" value={form.email}
+            required
+            type="email"
+            placeholder="Email *"
+            value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
           />
           <input
-            placeholder="Company" value={form.company}
+            placeholder="Company"
+            value={form.company}
             onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
           />
           <input
-            placeholder="Title" value={form.title}
+            placeholder="Title"
+            value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
           />
           <input
-            placeholder="LinkedIn URL" value={form.linkedin_url}
+            placeholder="LinkedIn URL"
+            value={form.linkedin_url}
             onChange={(e) => setForm((f) => ({ ...f, linkedin_url: e.target.value }))}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
           />
           <textarea
-            placeholder="Notes" value={form.notes} rows={3}
+            placeholder="Notes"
+            value={form.notes}
+            rows={3}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
           />
           <div className="flex justify-end gap-2 mt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={isPending} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Create
             </button>
           </div>

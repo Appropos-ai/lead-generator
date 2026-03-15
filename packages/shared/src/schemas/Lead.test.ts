@@ -2,19 +2,18 @@ import { describe, it, expect } from "vitest"
 import { Schema } from "effect"
 import { PipelineStage, CreateLeadInput, UpdateLeadInput, BulkStageInput, BulkDeleteInput } from "./Lead.js"
 
-const decode = <A, I>(schema: Schema.Schema<A, I>) =>
-  (input: unknown) => Schema.decodeUnknownEither(schema)(input)
+const decode =
+  <A, I>(schema: Schema.Schema<A, I>) =>
+  (input: unknown) =>
+    Schema.decodeUnknownEither(schema)(input)
 
 describe("PipelineStage", () => {
   const parse = decode(PipelineStage)
 
-  it.each(["new", "contacted", "responded", "converted", "lost"])(
-    "accepts valid stage '%s'",
-    (stage) => {
-      const result = parse(stage)
-      expect(result._tag).toBe("Right")
-    }
-  )
+  it.each(["new", "contacted", "responded", "converted", "lost"])("accepts valid stage '%s'", (stage) => {
+    const result = parse(stage)
+    expect(result._tag).toBe("Right")
+  })
 
   it("rejects invalid stage", () => {
     const result = parse("invalid")

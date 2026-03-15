@@ -13,42 +13,39 @@ export const OutreachService = Context.GenericTag<OutreachService>("OutreachServ
 
 export const OutreachServiceLive = Layer.effect(
   OutreachService,
-  Effect.map(DatabaseService, (db): OutreachService => ({
-    listByLead: (leadId) =>
-      db.all<OutreachEntry>(
-        "SELECT * FROM outreach_log WHERE lead_id = ? ORDER BY date DESC",
-        leadId
-      ),
+  Effect.map(
+    DatabaseService,
+    (db): OutreachService => ({
+      listByLead: (leadId) =>
+        db.all<OutreachEntry>("SELECT * FROM outreach_log WHERE lead_id = ? ORDER BY date DESC", leadId),
 
-    create: (input) =>
-      Effect.flatMap(
-        db.get<{ id: number }>("SELECT id FROM leads WHERE id = ?", input.lead_id),
-        (lead) => {
+      create: (input) =>
+        Effect.flatMap(db.get<{ id: number }>("SELECT id FROM leads WHERE id = ?", input.lead_id), (lead) => {
           if (!lead) return Effect.fail(new LeadReferenceError({ message: `Lead ${input.lead_id} not found` }))
           return Effect.flatMap(
             db.run(
               `INSERT INTO outreach_log (lead_id, date, channel, status, notes) VALUES (?, ?, ?, ?, ?)`,
-              input.lead_id, input.date, input.channel, input.status, input.notes ?? null
+              input.lead_id,
+              input.date,
+              input.channel,
+              input.status,
+              input.notes ?? null,
             ),
             (result) =>
               Effect.flatMap(
-                db.get<OutreachEntry>(
-                  "SELECT * FROM outreach_log WHERE id = ?",
-                  result.lastInsertRowid
-                ),
-                (entry) => entry ? Effect.succeed(entry) : Effect.die(new Error("Outreach entry not found after insert"))
-              )
+                db.get<OutreachEntry>("SELECT * FROM outreach_log WHERE id = ?", result.lastInsertRowid),
+                (entry) =>
+                  entry ? Effect.succeed(entry) : Effect.die(new Error("Outreach entry not found after insert")),
+              ),
           )
-        }
-      ),
+        }),
 
-    remove: (id) =>
-      Effect.flatMap(
-        db.run("DELETE FROM outreach_log WHERE id = ?", id),
-        (result) =>
+      remove: (id) =>
+        Effect.flatMap(db.run("DELETE FROM outreach_log WHERE id = ?", id), (result) =>
           result.changes === 0
             ? Effect.fail(new OutreachNotFoundError({ message: `Outreach entry ${id} not found` }))
-            : Effect.void
-      ),
-  }))
+            : Effect.void,
+        ),
+    }),
+  ),
 )

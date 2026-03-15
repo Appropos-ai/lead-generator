@@ -23,8 +23,8 @@ export function useRunPlugin() {
   return useMutation({
     mutationFn: pluginsApi.run,
     onSuccess: (run) => {
-      qc.invalidateQueries({ queryKey: ["plugin-runs"] })
-      qc.invalidateQueries({ queryKey: ["leads"] })
+      void qc.invalidateQueries({ queryKey: ["plugin-runs"] })
+      void qc.invalidateQueries({ queryKey: ["leads"] })
       toast.success(`Plugin completed: ${run.leads_added} leads added`)
     },
     onError: (err: Error) => toast.error(err.message),

@@ -18,7 +18,8 @@ export function createTestDb(): DatabaseService {
 
   // Run all migration files
   if (fs.existsSync(migrationsDir)) {
-    const files = fs.readdirSync(migrationsDir)
+    const files = fs
+      .readdirSync(migrationsDir)
       .filter((f) => /^\d{3}_[a-zA-Z0-9_]+\.sql$/.test(f))
       .sort()
     for (const file of files) {
@@ -29,10 +30,8 @@ export function createTestDb(): DatabaseService {
 
   return {
     run: (sql, ...params) => Effect.sync(() => db.prepare(sql).run(...params)),
-    get: <T>(sql: string, ...params: unknown[]) =>
-      Effect.sync(() => db.prepare(sql).get(...params) as T | undefined),
-    all: <T>(sql: string, ...params: unknown[]) =>
-      Effect.sync(() => db.prepare(sql).all(...params) as T[]),
+    get: <T>(sql: string, ...params: unknown[]) => Effect.sync(() => db.prepare(sql).get(...params) as T | undefined),
+    all: <T>(sql: string, ...params: unknown[]) => Effect.sync(() => db.prepare(sql).all(...params) as T[]),
     transaction: <A>(fn: () => A) => Effect.sync(() => db.transaction(fn)()),
   }
 }

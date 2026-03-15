@@ -22,7 +22,7 @@ describe("OutreachService", () => {
           const outreach = yield* OutreachService
           const lead = yield* leads.create(validLead)
           return yield* outreach.listByLead(lead.id)
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
       expect(result).toHaveLength(0)
     })
@@ -38,7 +38,7 @@ describe("OutreachService", () => {
           yield* outreach.create({ ...validOutreach(lead.id), date: "2024-01-15" })
           yield* outreach.create({ ...validOutreach(lead.id), date: "2024-01-10" })
           return yield* outreach.listByLead(lead.id)
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
       expect(result).toHaveLength(3)
       expect(result[0].date).toBe("2024-01-15")
@@ -52,7 +52,7 @@ describe("OutreachService", () => {
         Effect.gen(function* () {
           const outreach = yield* OutreachService
           return yield* outreach.listByLead(99999)
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
       expect(result).toHaveLength(0)
     })
@@ -68,7 +68,7 @@ describe("OutreachService", () => {
           yield* outreach.create(validOutreach(lead1.id))
           yield* outreach.create(validOutreach(lead2.id))
           return yield* outreach.listByLead(lead1.id)
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
       expect(result).toHaveLength(1)
     })
@@ -83,7 +83,7 @@ describe("OutreachService", () => {
           const outreach = yield* OutreachService
           const lead = yield* leads.create(validLead)
           return yield* outreach.create(validOutreach(lead.id))
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
       expect(result.id).toBeGreaterThan(0)
       expect(result.channel).toBe("email")
@@ -96,7 +96,7 @@ describe("OutreachService", () => {
         Effect.gen(function* () {
           const outreach = yield* OutreachService
           return yield* Effect.either(outreach.create(validOutreach(999)))
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
       expect(result._tag).toBe("Left")
       if (result._tag === "Left") {
@@ -117,7 +117,7 @@ describe("OutreachService", () => {
           yield* outreach.remove(entry.id)
           const entries = yield* outreach.listByLead(lead.id)
           expect(entries).toHaveLength(0)
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
     })
 
@@ -127,7 +127,7 @@ describe("OutreachService", () => {
         Effect.gen(function* () {
           const outreach = yield* OutreachService
           return yield* Effect.either(outreach.remove(999))
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
       expect(result._tag).toBe("Left")
       if (result._tag === "Left") {

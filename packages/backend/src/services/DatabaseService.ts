@@ -37,7 +37,8 @@ export const DatabaseServiceLive = Layer.scoped(
         // Run migrations
         const migrationsDir = path.join(__dirname, "..", "db", "migrations")
         if (fs.existsSync(migrationsDir)) {
-          const files = fs.readdirSync(migrationsDir)
+          const files = fs
+            .readdirSync(migrationsDir)
             .filter((f) => /^\d{3}_[a-zA-Z0-9_]+\.sql$/.test(f))
             .sort()
           for (const file of files) {
@@ -53,15 +54,13 @@ export const DatabaseServiceLive = Layer.scoped(
 
         return db
       }),
-      (db) => Effect.sync(() => db.close())
+      (db) => Effect.sync(() => db.close()),
     ),
     (db): DatabaseService => ({
       run: (sql, ...params) => Effect.sync(() => db.prepare(sql).run(...params)),
-      get: <T>(sql: string, ...params: unknown[]) =>
-        Effect.sync(() => db.prepare(sql).get(...params) as T | undefined),
-      all: <T>(sql: string, ...params: unknown[]) =>
-        Effect.sync(() => db.prepare(sql).all(...params) as T[]),
+      get: <T>(sql: string, ...params: unknown[]) => Effect.sync(() => db.prepare(sql).get(...params) as T | undefined),
+      all: <T>(sql: string, ...params: unknown[]) => Effect.sync(() => db.prepare(sql).all(...params) as T[]),
       transaction: <A>(fn: () => A) => Effect.sync(() => db.transaction(fn)()),
-    })
-  )
+    }),
+  ),
 )

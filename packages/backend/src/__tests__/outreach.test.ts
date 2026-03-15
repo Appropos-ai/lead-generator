@@ -20,12 +20,7 @@ describe("POST /api/outreach", () => {
     const leadRes = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
     const leadId = (leadRes.body as Record<string, unknown>).id as number
 
-    const res = await api(
-      baseUrl,
-      "POST",
-      "/api/outreach",
-      makeOutreachInput(leadId)
-    )
+    const res = await api(baseUrl, "POST", "/api/outreach", makeOutreachInput(leadId))
     expect(res.status).toBe(201)
     expect(res.body).toMatchObject({
       lead_id: leadId,
@@ -35,12 +30,7 @@ describe("POST /api/outreach", () => {
   })
 
   it("returns 422 for non-existent lead_id", async () => {
-    const res = await api(
-      baseUrl,
-      "POST",
-      "/api/outreach",
-      makeOutreachInput(99999)
-    )
+    const res = await api(baseUrl, "POST", "/api/outreach", makeOutreachInput(99999))
     expect(res.status).toBe(422)
   })
 
@@ -48,12 +38,7 @@ describe("POST /api/outreach", () => {
     const leadRes = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
     const leadId = (leadRes.body as Record<string, unknown>).id as number
 
-    const res = await api(
-      baseUrl,
-      "POST",
-      "/api/outreach",
-      makeOutreachInput(leadId, { channel: "phone" })
-    )
+    const res = await api(baseUrl, "POST", "/api/outreach", makeOutreachInput(leadId, { channel: "phone" }))
     expect(res.status).toBe(400)
   })
 
@@ -61,12 +46,7 @@ describe("POST /api/outreach", () => {
     const leadRes = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
     const leadId = (leadRes.body as Record<string, unknown>).id as number
 
-    const res = await api(
-      baseUrl,
-      "POST",
-      "/api/outreach",
-      makeOutreachInput(leadId, { status: "failed" })
-    )
+    const res = await api(baseUrl, "POST", "/api/outreach", makeOutreachInput(leadId, { status: "failed" }))
     expect(res.status).toBe(400)
   })
 })
@@ -76,18 +56,8 @@ describe("GET /api/outreach", () => {
     const leadRes = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
     const leadId = (leadRes.body as Record<string, unknown>).id as number
 
-    await api(
-      baseUrl,
-      "POST",
-      "/api/outreach",
-      makeOutreachInput(leadId, { date: "2025-01-01" })
-    )
-    await api(
-      baseUrl,
-      "POST",
-      "/api/outreach",
-      makeOutreachInput(leadId, { date: "2025-06-01" })
-    )
+    await api(baseUrl, "POST", "/api/outreach", makeOutreachInput(leadId, { date: "2025-01-01" }))
+    await api(baseUrl, "POST", "/api/outreach", makeOutreachInput(leadId, { date: "2025-06-01" }))
 
     const res = await api(baseUrl, "GET", `/api/outreach?lead_id=${leadId}`)
     expect(res.status).toBe(200)
@@ -117,12 +87,7 @@ describe("DELETE /api/outreach/:id", () => {
     const leadRes = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
     const leadId = (leadRes.body as Record<string, unknown>).id as number
 
-    const createRes = await api(
-      baseUrl,
-      "POST",
-      "/api/outreach",
-      makeOutreachInput(leadId)
-    )
+    const createRes = await api(baseUrl, "POST", "/api/outreach", makeOutreachInput(leadId))
     const entryId = (createRes.body as Record<string, unknown>).id as number
 
     const res = await api(baseUrl, "DELETE", `/api/outreach/${entryId}`)

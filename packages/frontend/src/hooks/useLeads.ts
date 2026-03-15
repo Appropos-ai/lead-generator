@@ -23,7 +23,7 @@ export function useCreateLead() {
   return useMutation({
     mutationFn: leadsApi.create,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["leads"] })
+      void qc.invalidateQueries({ queryKey: ["leads"] })
       toast.success("Lead created")
     },
     onError: (err: Error) => toast.error(err.message),
@@ -33,10 +33,9 @@ export function useCreateLead() {
 export function useUpdateLead() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateLeadInput }) =>
-      leadsApi.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdateLeadInput }) => leadsApi.update(id, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["leads"] })
+      void qc.invalidateQueries({ queryKey: ["leads"] })
       toast.success("Lead updated")
     },
     onError: (err: Error) => toast.error(err.message),
@@ -48,7 +47,7 @@ export function useDeleteLead() {
   return useMutation({
     mutationFn: leadsApi.delete,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["leads"] })
+      void qc.invalidateQueries({ queryKey: ["leads"] })
       toast.success("Lead deleted")
     },
     onError: (err: Error) => toast.error(err.message),
@@ -58,10 +57,9 @@ export function useDeleteLead() {
 export function useBulkStage() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ ids, stage }: { ids: number[]; stage: PipelineStage }) =>
-      leadsApi.bulkStage(ids, stage),
+    mutationFn: ({ ids, stage }: { ids: number[]; stage: PipelineStage }) => leadsApi.bulkStage(ids, stage),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["leads"] })
+      void qc.invalidateQueries({ queryKey: ["leads"] })
       toast.success("Leads updated")
     },
     onError: (err: Error) => toast.error(err.message),
@@ -73,7 +71,7 @@ export function useBulkDelete() {
   return useMutation({
     mutationFn: leadsApi.bulkDelete,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["leads"] })
+      void qc.invalidateQueries({ queryKey: ["leads"] })
       toast.success("Leads deleted")
     },
     onError: (err: Error) => toast.error(err.message),

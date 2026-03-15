@@ -5,7 +5,11 @@ import { isRateLimited } from "./utils/rateLimiter.js"
 const MAX_BODY_SIZE = 1_048_576 // 1 MB
 const ALLOWED_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:5173"
 
-type RouteHandler = (req: http.IncomingMessage, params: Record<string, string>, body: unknown) => Effect.Effect<unknown, unknown>
+type RouteHandler = (
+  req: http.IncomingMessage,
+  params: Record<string, string>,
+  body: unknown,
+) => Effect.Effect<unknown, unknown>
 
 interface Route {
   method: string
@@ -18,7 +22,9 @@ interface Route {
 const routes: Route[] = []
 
 // Mutates shared module state — test isolation requires pool: "forks" (process-per-file) in vitest config.
-export function resetRoutes() { routes.length = 0 }
+export function resetRoutes() {
+  routes.length = 0
+}
 
 function pathToRegex(path: string): { pattern: RegExp; paramNames: string[] } {
   const paramNames: string[] = []
@@ -35,11 +41,15 @@ export function route(method: string, path: string, handler: RouteHandler, optio
 }
 
 class BodyTooLargeError extends Error {
-  constructor() { super("Request body too large") }
+  constructor() {
+    super("Request body too large")
+  }
 }
 
 class MalformedJsonError extends Error {
-  constructor() { super("Malformed JSON body") }
+  constructor() {
+    super("Malformed JSON body")
+  }
 }
 
 function parseBody(req: http.IncomingMessage): Promise<unknown> {
@@ -58,7 +68,11 @@ function parseBody(req: http.IncomingMessage): Promise<unknown> {
     req.on("end", () => {
       const raw = Buffer.concat(chunks).toString()
       if (!raw) return resolve(undefined)
-      try { resolve(JSON.parse(raw)) } catch { reject(new MalformedJsonError()) }
+      try {
+        resolve(JSON.parse(raw))
+      } catch {
+        reject(new MalformedJsonError())
+      }
     })
     req.on("error", (err) => reject(err))
   })
@@ -68,12 +82,15 @@ function parseQuery(url: string): Record<string, string> {
   const idx = url.indexOf("?")
   if (idx === -1) return {}
   const params: Record<string, string> = {}
-  new URLSearchParams(url.slice(idx + 1)).forEach((v, k) => { params[k] = v })
+  new URLSearchParams(url.slice(idx + 1)).forEach((v, k) => {
+    params[k] = v
+  })
   return params
 }
 
 export function createServer(port: number): Effect.Effect<http.Server> {
   return Effect.async<http.Server>((resume) => {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     const server = http.createServer(async (req, res) => {
       // CORS
       res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN)
@@ -109,7 +126,9 @@ export function createServer(port: number): Effect.Effect<http.Server> {
         if (!match) continue
 
         const params: Record<string, string> = { ...query }
-        r.paramNames.forEach((name, i) => { params[name] = match[i + 1] })
+        r.paramNames.forEach((name, i) => {
+          params[name] = match[i + 1]
+        })
 
         let body: unknown
         // Content-Type validation for requests with bodies
@@ -162,12 +181,18 @@ export function createServer(port: number): Effect.Effect<http.Server> {
               }
 
               const status =
-                typeof err === "object" && err !== null && "status" in err && typeof (err as Record<string, unknown>).status === "number"
-                  ? (err as Record<string, unknown>).status as number
+                typeof err === "object" &&
+                err !== null &&
+                "status" in err &&
+                typeof (err as Record<string, unknown>).status === "number"
+                  ? ((err as Record<string, unknown>).status as number)
                   : 500
               const message =
-                typeof err === "object" && err !== null && "message" in err && typeof (err as Record<string, unknown>).message === "string"
-                  ? (err as Record<string, unknown>).message as string
+                typeof err === "object" &&
+                err !== null &&
+                "message" in err &&
+                typeof (err as Record<string, unknown>).message === "string"
+                  ? ((err as Record<string, unknown>).message as string)
                   : "Internal server error"
 
               if (status >= 500) {
@@ -179,8 +204,8 @@ export function createServer(port: number): Effect.Effect<http.Server> {
                 res.end(JSON.stringify({ error: message }))
               }
               return Effect.void
-            })
-          )
+            }),
+          ),
         )
         return
       }

@@ -29,7 +29,7 @@ describe("leadsApi", () => {
         "/api/leads",
         expect.objectContaining({
           headers: expect.objectContaining({ "Content-Type": "application/json" }),
-        })
+        }),
       )
     })
 
@@ -62,6 +62,7 @@ describe("leadsApi", () => {
     it("sends POST with body", async () => {
       const lead = { name: "Alice", email: "alice@test.com" }
       mockFetch.mockResolvedValue(jsonResponse({ id: 1, ...lead }))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await leadsApi.create(lead as any)
       const [, opts] = mockFetch.mock.calls[0]
       expect(opts.method).toBe("POST")
@@ -134,9 +135,7 @@ describe("request headers", () => {
     mockFetch.mockResolvedValue(jsonResponse({ id: 1, name: "Alice" }))
     await leadsApi.get(1)
     const [, opts] = mockFetch.mock.calls[0]
-    expect(opts.headers).toEqual(
-      expect.objectContaining({ "Content-Type": "application/json" })
-    )
+    expect(opts.headers).toEqual(expect.objectContaining({ "Content-Type": "application/json" }))
   })
 })
 

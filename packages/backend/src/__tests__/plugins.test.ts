@@ -47,11 +47,7 @@ describe("POST /api/plugins/:name/run", () => {
   })
 
   it("returns 404 for non-existent plugin", async () => {
-    const res = await api(
-      baseUrl,
-      "POST",
-      "/api/plugins/nonexistent-plugin/run"
-    )
+    const res = await api(baseUrl, "POST", "/api/plugins/nonexistent-plugin/run")
     expect(res.status).toBe(404)
   })
 

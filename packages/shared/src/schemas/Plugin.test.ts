@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest"
 import { Schema } from "effect"
 import { PluginMetadata, PluginRunStatus, PluginRun, ScrapedLead } from "./Plugin.js"
 
-const decode = <A, I>(schema: Schema.Schema<A, I>) =>
-  (input: unknown) => Schema.decodeUnknownEither(schema)(input)
+const decode =
+  <A, I>(schema: Schema.Schema<A, I>) =>
+  (input: unknown) =>
+    Schema.decodeUnknownEither(schema)(input)
 
 describe("PluginMetadata", () => {
   const parse = decode(PluginMetadata)
@@ -65,7 +67,7 @@ describe("PluginRun", () => {
   })
 
   it("rejects missing plugin_name", () => {
-    const { plugin_name, ...rest } = validRun
+    const { plugin_name: _, ...rest } = validRun
     expect(parse(rest)._tag).toBe("Left")
   })
 })

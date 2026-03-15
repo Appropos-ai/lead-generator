@@ -6,11 +6,24 @@
     "build": "pnpm --filter @lead-generator/shared build && pnpm -r build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "eslint packages/",
+    "lint:fix": "eslint packages/ --fix",
+    "typecheck": "pnpm -r exec tsc --noEmit",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx}\"",
     "clean": "pnpm -r exec rm -rf dist node_modules"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "concurrently": "^9.0.0",
+    "eslint": "^10.0.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
     "typescript": "^5.7.0",
+    "typescript-eslint": "^8.57.0",
     "vitest": "^4.1.0"
   }
 }

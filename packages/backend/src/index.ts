@@ -13,9 +13,7 @@ const PORT = Number(process.env.PORT ?? 3001)
 const DbLayer = DatabaseServiceLive
 const LeadLayer = LeadServiceLive.pipe(Layer.provide(DbLayer))
 const OutreachLayer = OutreachServiceLive.pipe(Layer.provide(DbLayer))
-const PluginLayer = PluginServiceLive.pipe(
-  Layer.provide(Layer.merge(LeadLayer, DbLayer))
-)
+const PluginLayer = PluginServiceLive.pipe(Layer.provide(Layer.merge(LeadLayer, DbLayer)))
 
 const AppLayer = Layer.mergeAll(LeadLayer, OutreachLayer, PluginLayer)
 
@@ -31,9 +29,7 @@ const program = Effect.gen(function* () {
   yield* createServer(PORT)
 })
 
-Effect.runPromise(
-  program.pipe(Effect.provide(AppLayer))
-).catch((err) => {
+Effect.runPromise(program.pipe(Effect.provide(AppLayer))).catch((err) => {
   console.error("Failed to start server:", err)
   process.exit(1)
 })

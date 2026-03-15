@@ -16,7 +16,7 @@ export function useCreateOutreach() {
   return useMutation({
     mutationFn: (data: CreateOutreachInput) => outreachApi.create(data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["outreach", vars.lead_id] })
+      void qc.invalidateQueries({ queryKey: ["outreach", vars.lead_id] })
       toast.success("Outreach logged")
     },
     onError: (err: Error) => toast.error(err.message),
@@ -28,7 +28,7 @@ export function useDeleteOutreach(leadId: number) {
   return useMutation({
     mutationFn: outreachApi.delete,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["outreach", leadId] })
+      void qc.invalidateQueries({ queryKey: ["outreach", leadId] })
       toast.success("Outreach entry deleted")
     },
     onError: (err: Error) => toast.error(err.message),

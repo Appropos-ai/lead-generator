@@ -1,21 +1,12 @@
 import { Schema } from "effect"
 
-export const PipelineStage = Schema.Literal(
-  "new",
-  "contacted",
-  "responded",
-  "converted",
-  "lost"
-)
+export const PipelineStage = Schema.Literal("new", "contacted", "responded", "converted", "lost")
 export type PipelineStage = typeof PipelineStage.Type
 
 const ShortString = Schema.String.pipe(Schema.maxLength(255))
 const UrlString = Schema.String.pipe(Schema.maxLength(2048))
 const NotesString = Schema.String.pipe(Schema.maxLength(10000))
-const Email = Schema.String.pipe(
-  Schema.maxLength(255),
-  Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
-)
+const Email = Schema.String.pipe(Schema.maxLength(255), Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
 
 export const Lead = Schema.Struct({
   id: Schema.Number,

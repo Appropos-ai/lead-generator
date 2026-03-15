@@ -29,7 +29,8 @@ function createInMemoryDb(): Database.Database {
 
   // Run real migration files
   if (fs.existsSync(migrationsDir)) {
-    const files = fs.readdirSync(migrationsDir)
+    const files = fs
+      .readdirSync(migrationsDir)
       .filter((f) => /^\d{3}_[a-zA-Z0-9_]+\.sql$/.test(f))
       .sort()
     for (const file of files) {
@@ -59,19 +60,15 @@ export async function createTestServer(): Promise<TestServer> {
   // Build a DatabaseService layer backed by the in-memory DB
   const dbService: DatabaseService = {
     run: (sql, ...params) => Effect.sync(() => db.prepare(sql).run(...params)),
-    get: <T>(sql: string, ...params: unknown[]) =>
-      Effect.sync(() => db.prepare(sql).get(...params) as T | undefined),
-    all: <T>(sql: string, ...params: unknown[]) =>
-      Effect.sync(() => db.prepare(sql).all(...params) as T[]),
+    get: <T>(sql: string, ...params: unknown[]) => Effect.sync(() => db.prepare(sql).get(...params) as T | undefined),
+    all: <T>(sql: string, ...params: unknown[]) => Effect.sync(() => db.prepare(sql).all(...params) as T[]),
     transaction: <A>(fn: () => A) => Effect.sync(() => db.transaction(fn)()),
   }
 
   const DbLayer = Layer.succeed(DatabaseService, dbService)
   const LeadLayer = LeadServiceLive.pipe(Layer.provide(DbLayer))
   const OutreachLayer = OutreachServiceLive.pipe(Layer.provide(DbLayer))
-  const PluginLayer = PluginServiceLive.pipe(
-    Layer.provide(Layer.merge(LeadLayer, DbLayer))
-  )
+  const PluginLayer = PluginServiceLive.pipe(Layer.provide(Layer.merge(LeadLayer, DbLayer)))
   const AppLayer = Layer.mergeAll(LeadLayer, OutreachLayer, PluginLayer)
 
   // Build services and register routes

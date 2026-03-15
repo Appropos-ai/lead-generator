@@ -33,26 +33,14 @@ describe("404", () => {
 
 describe("Content-Type validation", () => {
   it("POST with text/plain returns 415", async () => {
-    const res = await rawFetch(
-      baseUrl,
-      "POST",
-      "/api/leads",
-      "not json",
-      "text/plain"
-    )
+    const res = await rawFetch(baseUrl, "POST", "/api/leads", "not json", "text/plain")
     expect(res.status).toBe(415)
   })
 })
 
 describe("Malformed JSON", () => {
   it("POST with invalid JSON returns 400", async () => {
-    const res = await rawFetch(
-      baseUrl,
-      "POST",
-      "/api/leads",
-      "{invalid json",
-      "application/json"
-    )
+    const res = await rawFetch(baseUrl, "POST", "/api/leads", "{invalid json", "application/json")
     expect(res.status).toBe(400)
     expect(res.body).toEqual({ error: "Malformed JSON body" })
   })
@@ -67,7 +55,9 @@ describe("Security headers", () => {
 })
 
 describe("Rate limiting", () => {
-  beforeAll(() => { resetRateLimiter() })
+  beforeAll(() => {
+    resetRateLimiter()
+  })
 
   it("101st request returns 429", async () => {
     // Fire 100 requests to exhaust the limit

@@ -20,5 +20,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       </BrowserRouter>
       <Toaster position="top-right" />
     </QueryClientProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 )

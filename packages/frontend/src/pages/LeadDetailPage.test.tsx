@@ -35,7 +35,7 @@ function renderWithRouter(leadId: number) {
           <Route path="/leads/:id" element={<LeadDetailPage />} />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 

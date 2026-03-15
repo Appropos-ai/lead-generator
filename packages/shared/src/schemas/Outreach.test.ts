@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest"
 import { Schema } from "effect"
 import { OutreachChannel, OutreachStatus, CreateOutreachInput } from "./Outreach.js"
 
-const decode = <A, I>(schema: Schema.Schema<A, I>) =>
-  (input: unknown) => Schema.decodeUnknownEither(schema)(input)
+const decode =
+  <A, I>(schema: Schema.Schema<A, I>) =>
+  (input: unknown) =>
+    Schema.decodeUnknownEither(schema)(input)
 
 describe("OutreachChannel", () => {
   const parse = decode(OutreachChannel)

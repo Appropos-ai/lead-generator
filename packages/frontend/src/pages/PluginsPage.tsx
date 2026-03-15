@@ -17,7 +17,10 @@ export default function PluginsPage() {
       ) : (
         <div className="grid gap-4 mb-8">
           {plugins.map((plugin) => (
-            <div key={plugin.name} className="bg-white rounded-lg border border-gray-200 p-5 flex items-center justify-between">
+            <div
+              key={plugin.name}
+              className="bg-white rounded-lg border border-gray-200 p-5 flex items-center justify-between"
+            >
               <div>
                 <h3 className="font-bold">{plugin.name}</h3>
                 <p className="text-sm text-gray-500">{plugin.description}</p>

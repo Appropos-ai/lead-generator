@@ -3,7 +3,7 @@ export async function api(
   method: string,
   path: string,
   body?: unknown,
-  headers?: Record<string, string>
+  headers?: Record<string, string>,
 ): Promise<{ status: number; body: unknown; headers: Headers }> {
   const res = await fetch(`${baseUrl}${path}`, {
     method,
@@ -33,7 +33,7 @@ export async function rawFetch(
   method: string,
   path: string,
   rawBody: string,
-  contentType: string
+  contentType: string,
 ): Promise<{ status: number; body: unknown; headers: Headers }> {
   const res = await fetch(`${baseUrl}${path}`, {
     method,

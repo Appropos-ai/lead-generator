@@ -56,15 +56,13 @@ export const leadsApi = {
     return request<PaginatedLeads>(qs ? `/leads?${qs}` : "/leads")
   },
   get: (id: number) => request<Lead>(`/leads/${id}`),
-  create: (data: CreateLeadInput) =>
-    request<Lead>("/leads", { method: "POST", body: JSON.stringify(data) }),
+  create: (data: CreateLeadInput) => request<Lead>("/leads", { method: "POST", body: JSON.stringify(data) }),
   update: (id: number, data: UpdateLeadInput) =>
     request<Lead>(`/leads/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   delete: (id: number) => request<void>(`/leads/${id}`, { method: "DELETE" }),
   bulkStage: (ids: number[], stage: PipelineStage) =>
     request<void>("/leads/bulk/stage", { method: "PATCH", body: JSON.stringify({ ids, stage }) }),
-  bulkDelete: (ids: number[]) =>
-    request<void>("/leads/bulk/delete", { method: "POST", body: JSON.stringify({ ids }) }),
+  bulkDelete: (ids: number[]) => request<void>("/leads/bulk/delete", { method: "POST", body: JSON.stringify({ ids }) }),
 }
 
 // Outreach

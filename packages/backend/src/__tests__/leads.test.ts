@@ -108,7 +108,7 @@ describe("GET /api/leads", () => {
 describe("GET /api/leads/:id", () => {
   it("returns lead by ID", async () => {
     const createRes = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
-    const id = (createRes.body as Record<string, unknown>).id
+    const id = (createRes.body as Record<string, unknown>).id as number
     const res = await api(baseUrl, "GET", `/api/leads/${id}`)
     expect(res.status).toBe(200)
     expect((res.body as Record<string, unknown>).id).toBe(id)
@@ -128,7 +128,7 @@ describe("GET /api/leads/:id", () => {
 describe("PATCH /api/leads/:id", () => {
   it("updates a single field", async () => {
     const createRes = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
-    const id = (createRes.body as Record<string, unknown>).id
+    const id = (createRes.body as Record<string, unknown>).id as number
     const res = await api(baseUrl, "PATCH", `/api/leads/${id}`, {
       company: "NewCorp",
     })
@@ -139,7 +139,7 @@ describe("PATCH /api/leads/:id", () => {
   it("returns 409 when updating email to existing one", async () => {
     const lead1 = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
     const lead2 = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
-    const id2 = (lead2.body as Record<string, unknown>).id
+    const id2 = (lead2.body as Record<string, unknown>).id as number
     const email1 = (lead1.body as Record<string, unknown>).email
 
     const res = await api(baseUrl, "PATCH", `/api/leads/${id2}`, {
@@ -159,7 +159,7 @@ describe("PATCH /api/leads/:id", () => {
 describe("DELETE /api/leads/:id", () => {
   it("deletes lead and returns 204", async () => {
     const createRes = await api(baseUrl, "POST", "/api/leads", makeLeadInput())
-    const id = (createRes.body as Record<string, unknown>).id
+    const id = (createRes.body as Record<string, unknown>).id as number
     const res = await api(baseUrl, "DELETE", `/api/leads/${id}`)
     expect(res.status).toBe(204)
 
@@ -181,22 +181,14 @@ describe("DELETE /api/leads/:id", () => {
     await api(baseUrl, "POST", "/api/outreach", makeOutreachInput(leadId))
 
     // Verify outreach exists
-    const outreachBefore = await api(
-      baseUrl,
-      "GET",
-      `/api/outreach?lead_id=${leadId}`
-    )
+    const outreachBefore = await api(baseUrl, "GET", `/api/outreach?lead_id=${leadId}`)
     expect((outreachBefore.body as unknown[]).length).toBe(1)
 
     // Delete the lead
     await api(baseUrl, "DELETE", `/api/leads/${leadId}`)
 
     // Outreach should be gone (cascade)
-    const outreachAfter = await api(
-      baseUrl,
-      "GET",
-      `/api/outreach?lead_id=${leadId}`
-    )
+    const outreachAfter = await api(baseUrl, "GET", `/api/outreach?lead_id=${leadId}`)
     expect((outreachAfter.body as unknown[]).length).toBe(0)
   })
 })

@@ -8,12 +8,8 @@ import { createTestDbLayer } from "../test-helpers/mockDb.js"
 describe("PluginService", () => {
   describe("sanitizeError", () => {
     it("redacts environment variable patterns", () => {
-      expect(sanitizeError("Error: API_KEY=secret123 happened")).toBe(
-        "Error: [REDACTED] happened"
-      )
-      expect(sanitizeError("DATABASE_URL=postgres://user:pass@host/db")).toBe(
-        "[REDACTED]"
-      )
+      expect(sanitizeError("Error: API_KEY=secret123 happened")).toBe("Error: [REDACTED] happened")
+      expect(sanitizeError("DATABASE_URL=postgres://user:pass@host/db")).toBe("[REDACTED]")
     })
 
     it("truncates to 500 characters", () => {
@@ -69,9 +65,7 @@ describe("PluginService", () => {
     function makeLayer() {
       const dbLayer = createTestDbLayer()
       const leadLayer = LeadServiceLive.pipe(Layer.provide(dbLayer))
-      return PluginServiceLive.pipe(
-        Layer.provide(Layer.merge(leadLayer, dbLayer))
-      )
+      return PluginServiceLive.pipe(Layer.provide(Layer.merge(leadLayer, dbLayer)))
     }
 
     it("returns empty array initially", async () => {
@@ -80,7 +74,7 @@ describe("PluginService", () => {
         Effect.gen(function* () {
           const svc = yield* PluginService
           return yield* svc.listRuns()
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
       expect(result).toHaveLength(0)
     })
@@ -88,9 +82,7 @@ describe("PluginService", () => {
     it("returns runs ordered by started_at DESC", async () => {
       const dbLayer = createTestDbLayer()
       const leadLayer = LeadServiceLive.pipe(Layer.provide(dbLayer))
-      const pluginLayer = PluginServiceLive.pipe(
-        Layer.provide(Layer.merge(leadLayer, dbLayer))
-      )
+      const pluginLayer = PluginServiceLive.pipe(Layer.provide(Layer.merge(leadLayer, dbLayer)))
       const layer = Layer.merge(pluginLayer, dbLayer)
 
       const result = await Effect.runPromise(
@@ -99,17 +91,11 @@ describe("PluginService", () => {
           const svc = yield* PluginService
 
           // Insert test runs directly
-          yield* db.run(
-            "INSERT INTO plugin_runs (plugin_name, status) VALUES (?, ?)",
-            "plugin-a", "completed"
-          )
-          yield* db.run(
-            "INSERT INTO plugin_runs (plugin_name, status) VALUES (?, ?)",
-            "plugin-b", "completed"
-          )
+          yield* db.run("INSERT INTO plugin_runs (plugin_name, status) VALUES (?, ?)", "plugin-a", "completed")
+          yield* db.run("INSERT INTO plugin_runs (plugin_name, status) VALUES (?, ?)", "plugin-b", "completed")
 
           return yield* svc.listRuns()
-        }).pipe(Effect.provide(layer))
+        }).pipe(Effect.provide(layer)),
       )
       expect(result).toHaveLength(2)
       const names = result.map((r) => r.plugin_name)
@@ -122,15 +108,13 @@ describe("PluginService", () => {
     it("fails with PluginNotFoundError for nonexistent plugin", async () => {
       const dbLayer = createTestDbLayer()
       const leadLayer = LeadServiceLive.pipe(Layer.provide(dbLayer))
-      const pluginLayer = PluginServiceLive.pipe(
-        Layer.provide(Layer.merge(leadLayer, dbLayer))
-      )
+      const pluginLayer = PluginServiceLive.pipe(Layer.provide(Layer.merge(leadLayer, dbLayer)))
 
       const result = await Effect.runPromise(
         Effect.gen(function* () {
           const svc = yield* PluginService
           return yield* Effect.either(svc.run("nonexistent-plugin"))
-        }).pipe(Effect.provide(pluginLayer))
+        }).pipe(Effect.provide(pluginLayer)),
       )
       expect(result._tag).toBe("Left")
       if (result._tag === "Left") {
@@ -141,15 +125,13 @@ describe("PluginService", () => {
     it("fails with PluginNotFoundError for invalid plugin name", async () => {
       const dbLayer = createTestDbLayer()
       const leadLayer = LeadServiceLive.pipe(Layer.provide(dbLayer))
-      const pluginLayer = PluginServiceLive.pipe(
-        Layer.provide(Layer.merge(leadLayer, dbLayer))
-      )
+      const pluginLayer = PluginServiceLive.pipe(Layer.provide(Layer.merge(leadLayer, dbLayer)))
 
       const result = await Effect.runPromise(
         Effect.gen(function* () {
           const svc = yield* PluginService
           return yield* Effect.either(svc.run("../etc/passwd"))
-        }).pipe(Effect.provide(pluginLayer))
+        }).pipe(Effect.provide(pluginLayer)),
       )
       expect(result._tag).toBe("Left")
       if (result._tag === "Left") {
