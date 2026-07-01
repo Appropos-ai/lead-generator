@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    ports:
+      - "127.0.0.1:13100:3001"
+    volumes:
+      - ./data:/app/packages/backend/data
+    environment:
+      - CORS_ORIGIN=https://leads.voltvoice.io
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile
+    ports:
+      - "127.0.0.1:13101:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
