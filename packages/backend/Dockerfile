@@ -22,9 +22,10 @@ RUN cp -r packages/backend/src/db packages/backend/dist/db
 FROM node:23-slim
 WORKDIR /app
 
-# Copy dependency trees (Docker dereferences pnpm symlinks — that's fine)
+# Copy full pnpm dependency tree (symlinks to .pnpm store must be preserved)
 COPY --from=builder /app/node_modules/ ./node_modules/
 COPY --from=builder /app/packages/backend/node_modules/ ./packages/backend/node_modules/
+COPY --from=builder /app/packages/shared/node_modules/ ./packages/shared/node_modules/
 
 # Copy built output
 COPY --from=builder /app/packages/shared/dist/ ./packages/shared/dist/
