@@ -1,6 +1,6 @@
 # ---- builder ----
 FROM node:23-slim AS builder
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 WORKDIR /app
 
 # Copy manifests first for layer caching
