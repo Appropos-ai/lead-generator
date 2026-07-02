@@ -27,6 +27,9 @@ const program = Effect.gen(function* () {
   registerPluginRoutes(pluginService)
 
   yield* createServer(PORT)
+
+  // Keep the fiber alive so the scoped DatabaseService layer stays open
+  yield* Effect.never
 })
 
 Effect.runPromise(program.pipe(Effect.provide(AppLayer))).catch((err) => {
